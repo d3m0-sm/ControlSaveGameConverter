@@ -20,6 +20,7 @@ namespace ControlSaveGameConverter
             string target_path = "";
             string[] savefiles = { "global", "hub", "meta", "persistent" };
             string[] dirs;
+            string[] files;
             string overwrite = "leer";
             int i = 0;
             IDictionary<int, string> slots = new Dictionary<int, string>();
@@ -87,8 +88,75 @@ namespace ControlSaveGameConverter
 
                 }
 
-                Console.ReadKey();
+                
             }
+            else if (pick == "2")
+            {
+                Console.WriteLine("Wich saveslot do you want to transfer?\n");
+                files = Directory.GetFiles(gog_path, "savegame-slot-*_global");
+                foreach (var file in files)
+                {
+
+                    int idx = file.LastIndexOf("\\");
+                    string slot = file.Substring(idx + 1);
+                    int idx2 = slot.LastIndexOf("_");
+                    slot = slot.Remove(idx2);
+                    i++;
+                    Console.WriteLine(i + ": " + slot);
+                    slots[i] = slot;
+                }
+                int num = Convert.ToInt32(Console.ReadLine());
+                source_path = gog_path + "\\" + slots[num];
+                target_path = epic_path + "\\" + slots[num];
+                if (Directory.Exists(target_path) == false)
+                {
+                    Directory.CreateDirectory(target_path);
+                }
+                
+                try
+                {
+                    File.Copy(source_path + "_global", target_path + "\\" + "global.chunk");
+                }
+                catch (System.IO.IOException)
+                {
+                    Console.WriteLine("There are already control savefiles in your GOG directory!\nDo you want to overwrite them? y/n");
+
+                    do
+                    {
+                        overwrite = Console.ReadLine();
+                        overwrite = overwrite.ToString();
+                        if (overwrite == "y" || overwrite == "n")
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("\nPlease type either y or n");
+
+                        }
+                    } while (overwrite != "y" || overwrite != "n");
+
+
+                    if (overwrite == "y")
+                    {
+                        foreach (var file in savefiles)
+                        {
+                            File.Copy(source_path + "_" + file, target_path + "\\" + file + ".chunk", true);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("\nFiles can't be transfered...\nThe Setup ends now");
+                        Console.ReadKey();
+                        Environment.Exit(0);
+                    }
+
+
+                    Console.WriteLine("\nConvertions and file transfer complete");
+                }
+
+            }
+            Console.ReadKey();
         }
     }
 }
